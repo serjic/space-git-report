@@ -16,7 +16,8 @@ class Options(
     val spaceUrl: String,
     val projectKey: String,
     val repoName: String,
-    val documentName : String
+    val documentName : String,
+    val folder : String
 )
 
 suspend fun main(args: Array<String>) {
@@ -25,12 +26,14 @@ suspend fun main(args: Array<String>) {
     val projectKey = args[1]
     val repoName = args[2]
     val documentName = args[3]
+    val folder = args[4]
 
     val opts = Options(
         spaceUrl,
         projectKey,
         repoName,
-        documentName
+        documentName,
+        folder
     )
 
     val httpClient = ktorClientForSpace()
@@ -75,7 +78,7 @@ suspend fun main(args: Array<String>) {
 
     client.projects.documents.createDocument(
         project = ProjectIdentifier.Key(opts.projectKey),
-        folder = FolderIdentifier.Root,
+        folder = FolderIdentifier.Id(opts.folder),
         name = opts.documentName,
         bodyIn = TextDocumentBodyCreateTypedIn(
             docContent = MdTextDocumentContent(
