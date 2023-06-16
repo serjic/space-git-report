@@ -5,7 +5,6 @@ import space.jetbrains.api.runtime.BatchInfo
 import space.jetbrains.api.runtime.SpaceClient
 import space.jetbrains.api.runtime.ktorClientForSpace
 import space.jetbrains.api.runtime.resources.projects
-import space.jetbrains.api.runtime.resources.teamDirectory
 import space.jetbrains.api.runtime.types.*
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -13,17 +12,40 @@ import java.util.*
 
 const val totalMonths = 6
 
-suspend fun main() {
+class Options(
+    val spaceUrl: String,
+    val projectKey: String,
+    val repoName: String,
+    val documentName : String
+)
+
+suspend fun main(args: Array<String>) {
+
+    val spaceUrl = args[0]
+    val projectKey = args[1]
+    val repoName = args[2]
+    val documentName = args[3]
+
+    val opts = Options(
+        spaceUrl,
+        projectKey,
+        repoName,
+        documentName
+    )
+
     val httpClient = ktorClientForSpace()
+
+    val token = System.getenv("SPACE_TOKEN").takeIf { it.isNotEmpty() } ?: System.getenv("JB_SPACE_CLIENT_TOKEN")
+
     val client = SpaceClient(
         httpClient,
-        "https://jetbrains.team",
-        ""
+        opts.spaceUrl,
+        token
     )
 
     val startDate = LocalDate(2023, 1, 1)
 
-    val report = Report()
+    val report = Report(opts)
 
     (0 until totalMonths).forEach { month ->
 
@@ -32,7 +54,8 @@ suspend fun main() {
 
         val allCommits = allCommits(
             client,
-            fromDate, toDate
+            fromDate, toDate,
+            opts
         )
 
         allCommits
@@ -50,10 +73,10 @@ suspend fun main() {
 
     }
 
-    client.teamDirectory.profiles.documents.createDocument(
-        profile = ProfileIdentifier.Me,
-        name = "123",
+    client.projects.documents.createDocument(
+        project = ProjectIdentifier.Key(opts.projectKey),
         folder = FolderIdentifier.Root,
+        name = opts.documentName,
         bodyIn = TextDocumentBodyCreateTypedIn(
             docContent = MdTextDocumentContent(
                 markdown = report.md(startDate)
@@ -64,7 +87,7 @@ suspend fun main() {
 }
 
 
-class Report {
+class Report(val opts: Options) {
     private val commitInfoByUsername = mutableMapOf<String, ProfileCommitInfo>()
 
     fun addCommits(profile: TD_MemberProfile, fromDate: LocalDate, commits: List<GitCommitInfo>) {
@@ -91,7 +114,7 @@ class Report {
                 it.second.total
             }
             .forEach {
-                append("https://jetbrains.team/m/${it.second.profile.username},")
+                append("${opts.spaceUrl}/m/${it.second.profile.username},")
                 val profileCommitInfo = it.second
                 appendLine(
                     (0 until totalMonths).joinToString(separator = ",") { month ->
@@ -123,7 +146,7 @@ class Report {
                 it.second.total
             }
             .forEach {
-                append("| https://jetbrains.team/m/${it.second.profile.username} | ")
+                append("| ${opts.spaceUrl}/m/${it.second.profile.username} | ")
                 val profileCommitInfo = it.second
                 appendLine(
                     (0 until totalMonths).joinToString(separator = " | ") { month ->
@@ -131,7 +154,11 @@ class Report {
                         val toDate = startDate.plus(month + 1, DateTimeUnit.MONTH).minus(1, DateTimeUnit.DAY)
                         val count = profileCommitInfo.byDate(fromDate) ?: 0
                         val commitsLink =
-                            "https://jetbrains.team/p/crl/repositories/space/commits?query=author%3A${profileCommitInfo.profile.username}%20date%3A${format(fromDate)}..${format(toDate)}%20no-merges%3Atrue&tab=changes"
+                            "${opts.spaceUrl}/p/${opts.projectKey}/repositories/${opts.repoName}/commits?query=author%3A${profileCommitInfo.profile.username}%20date%3A${
+                                format(
+                                    fromDate
+                                )
+                            }..${format(toDate)}%20no-merges%3Atrue&tab=changes"
                         "[${count}]($commitsLink)"
                     } + " |"
                 )
@@ -155,11 +182,11 @@ class Report {
 
 }
 
-
 private suspend fun allCommits(
     client: SpaceClient,
     fromDate: LocalDate,
-    toDate: LocalDate
+    toDate: LocalDate,
+    opts: Options
 ): MutableList<GitCommitInfo> {
     var batch = BatchInfo(null, 1000)
     val allCommits = mutableListOf<GitCommitInfo>()
@@ -168,8 +195,8 @@ private suspend fun allCommits(
     while (true) {
 
         val res = client.projects.repositories.commits(
-            project = ProjectIdentifier.Key("crl"),
-            repository = "space",
+            project = ProjectIdentifier.Key(opts.projectKey),
+            repository = opts.repoName,
             query = "date:${format(fromDate)}..${format(toDate)} no-merges:true",
             batchInfo = batch
         ) {

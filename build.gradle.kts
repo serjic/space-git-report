@@ -1,9 +1,6 @@
 group = "space.jetbrains"
 version = "1.0.${System.getenv("JB_SPACE_EXECUTION_NUMBER") ?: ".0-dev"}"
 
-val spaceUsername: String by project
-val spacePassword: String by project
-
 val jackson_version: String by project
 val log4j_version: String by project
 val ktor_version: String by project
@@ -27,7 +24,16 @@ application {
 ktor {
     docker {
         localImageName.set("space.jetbrains.git-report")
-        imageTag.set("0.1.1-preview")
+        imageTag.set("0.1.2-preview")
+
+        externalRegistry.set(
+            io.ktor.plugin.features.DockerImageRegistry.dockerHub(
+                appName = provider { "space-git-report" },
+                username = providers.gradleProperty("dockerhubUsername"),
+                password = providers.gradleProperty("dockerhubAccessToken")
+            )
+        )
+
     }
 }
 
