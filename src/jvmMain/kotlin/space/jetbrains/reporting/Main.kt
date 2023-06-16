@@ -35,7 +35,7 @@ suspend fun main(args: Array<String>) {
 
     val httpClient = ktorClientForSpace()
 
-    val token = System.getenv("SPACE_TOKEN").takeIf { it.isNotEmpty() } ?: System.getenv("JB_SPACE_CLIENT_TOKEN")
+    val token = System.getenv("SPACE_TOKEN")?.takeIf { it.isNotEmpty() } ?: System.getenv("JB_SPACE_CLIENT_TOKEN") ?: error("No Space Token, set SPACE_TOKEN")
 
     val client = SpaceClient(
         httpClient,
