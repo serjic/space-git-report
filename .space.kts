@@ -12,7 +12,7 @@ job("Report") {
         gitPush { enabled = false }
     }
 
-    container("serjic/space-git-report:0.1.3-preview") {
+    container("serjic/space-git-report:0.1.4-preview") {
         args("https://jetbrains.team", "serjic", "space-git-report", "report 123")
     }
 }

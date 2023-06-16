@@ -24,7 +24,7 @@ application {
 ktor {
     docker {
         localImageName.set("space.jetbrains.git-report")
-        imageTag.set("0.1.3-preview")
+        imageTag.set("0.1.4-preview")
 
         externalRegistry.set(
             io.ktor.plugin.features.DockerImageRegistry.dockerHub(
