@@ -13,6 +13,6 @@ job("Report") {
     }
 
     container("serjic/space-git-report:0.1.4-preview") {
-        args("https://jetbrains.team", "serjic", "space-git-report", "report 123", "2R6JMn3w0qSX")
+        args("https://jetbrains.team", "serjic", "space-git-report", "report 123", "2G2sHP0chML4")
     }
 }
