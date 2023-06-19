@@ -6,13 +6,3 @@ job("Publish") {
     gradlew("openjdk:11", "publishImage") {
     }
 }
-
-job("Report") {
-    startOn {
-        gitPush { enabled = false }
-    }
-
-    container("serjic/space-git-report:0.1.4-preview") {
-        args("https://jetbrains.team", "serjic", "space-git-report", "report 123", "2G2sHP0chML4")
-    }
-}

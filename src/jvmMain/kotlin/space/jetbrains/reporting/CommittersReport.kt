@@ -48,7 +48,6 @@ suspend fun committersReport(args: Array<String>) {
         )
 
         allCommits
-            .filter { it.authorProfile != null }
             .groupBy { it.author.name }
             .toList()
             .sortedByDescending { it.second.count() }
@@ -93,7 +92,7 @@ private class CommittersReport(val opts: CommittersReportOptions) {
 
     fun addCommits(commitInfo: GitCommitInfo, fromDate: LocalDate, commits: List<GitCommitInfo>) {
         commitAuthorByName.getOrPut(commitInfo.author.name) {
-            ProfileCommitInfo("\"${commitInfo.author.name}<${commitInfo.author.email}>\"", commitInfo.authorProfile)
+            ProfileCommitInfo("${commitInfo.author.name}<${commitInfo.author.email}>", commitInfo.authorProfile)
         }.apply {
             this.addCommits(fromDate, commits)
         }
@@ -162,7 +161,7 @@ private class CommittersReport(val opts: CommittersReportOptions) {
                         val fromDate = startDate.plus(month, DateTimeUnit.MONTH)
                         val toDate = startDate.plus(month + 1, DateTimeUnit.MONTH).minus(1, DateTimeUnit.DAY)
                         val count = profileCommitInfo.byDate(fromDate) ?: 0
-                        val authorName = URLEncoder.encode(profileCommitInfo.profile?.username ?: profileCommitInfo.name)
+                        val authorName = URLEncoder.encode(profileCommitInfo.profile?.username ?: "\"${profileCommitInfo.name}\"")
                         val commitsLink =
                             "${opts.spaceUrl}/p/${opts.projectKey}/repositories/${opts.repoName}/commits?query=author%3A$authorName%20date%3A${
                                 format(

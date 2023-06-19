@@ -22,7 +22,7 @@ ktor {
     docker {
         localImageName.set("space-git-report")
 
-        imageTag.set("0.1.5-preview")
+        imageTag.set("0.1.6-preview")
 
         externalRegistry.set(
             io.ktor.plugin.features.DockerImageRegistry.dockerHub(

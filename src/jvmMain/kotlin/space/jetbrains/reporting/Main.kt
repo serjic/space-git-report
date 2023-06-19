@@ -12,12 +12,19 @@ class CommittersReportOptions(
 
 suspend fun main(args: Array<String>) {
 
-    val kind = args[0]
+    val firstArg = args[0]
 
-    when (kind) {
+    when (firstArg) {
         "committers" -> committersReport(args)
         "review-coverage" -> reviewCoverage(args)
-        else -> error("Report kind should be one of: committers, review-coverage.")
+        else -> {
+            println("Usage:")
+            println("help")
+            println("  Show this help")
+            println("committers <space_url> <project_key> <repo_name> <document_name> <folder_id>")
+            if (firstArg != "help")
+                error("Report kind should be one of: committers, review-coverage.")
+        }
     }
 
 }
